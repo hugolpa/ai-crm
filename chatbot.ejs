@@ -1,0 +1,289 @@
+<!-- chatbot.ejs -->
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8">
+    <title>Chat Inova AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <style>
+        /* Estilos */
+        .message-container {
+            margin-bottom: 10px;
+            overflow: auto;
+            max-height: 600px;
+            /*  altura máxima 600 px pro browser ficou ok*/
+        }
+
+        .whatsapp-balloon {
+            display: inline-block;
+            max-width: 70%;
+            padding: 10px;
+            border-radius: 10px;
+            word-wrap: break-word;
+            margin-bottom: 5px;
+        }
+
+        .whatsapp-sender {
+            color: #fff;
+            background-color: #25D366;
+            text-align: right;
+        }
+
+        .whatsapp-receiver {
+            color: #000;
+            background-color: #ECE5DD;
+        }
+
+        .timestamp {
+            font-size: 0.8em;
+            color: #777;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 class="mt-5 text-center">Chat Inova AI</h1>
+
+    <div class="container mt-5">
+        <p class="mt-2 text-center">
+            <b>Prompt setup(system):</b> <input type="text" id="systemInput" class="form-control"
+                placeholder="Digite o sistema">
+        </p>
+        <div class="row">
+            <div class="col-md-6 mx-auto">
+                <div id="chat" class="border p-3 message-container"></div>
+
+                <div id="connectionStatus" class="text-center mt-3" style="display: none;">
+                    <div class="alert alert-success" role="alert">
+                        Conectado
+                    </div>
+                </div>
+                <div id="qrCodeContainer" class="text-center mt-3">
+                    <!--  <img id="qrCodeImg" alt="QR Code"> -->
+                </div>
+                <form class="mt-3">
+                    <div class="input-group mb-3">
+
+                        <input type="text" id="messageInput" class="form-control" placeholder="Digite sua mensagem">
+                        <button type="button" class="btn btn-primary" onclick="sendMessage()">Enviar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+    <script>
+        // Função para exibir o indicador de "loading"
+        function showLoading() {
+            const chatDiv = document.getElementById('chat');
+            chatDiv.innerHTML += '<p><em>Carregando...</em></p>';
+        }
+
+        const ws = new WebSocket('ws://localhost:3000/chat');
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            const chatDiv = document.getElementById('chat');
+
+            if (data.messages) {
+                data.messages.forEach((message) => {
+                    const messageContainer = document.createElement('div');
+                    messageContainer.classList.add('message-container');
+
+                    const messageElement = document.createElement('div');
+                    messageElement.classList.add('whatsapp-balloon', message.from === 'Chatbot' ? 'whatsapp-receiver' : 'whatsapp-sender');
+
+                    // Função para formatar o timestamp
+                    const timestamp = formatTimestamp(message.timestamp);
+
+                    if (message.response) {
+                        showLoading(); // Exibe "loading" antes de mostrar a resposta
+
+                        // setTimeout para simular um atraso de carregamento
+                        setTimeout(() => {
+                            // Exiba apenas os primeiros 500 caracteres da resposta
+                            const truncatedResponse = message.response.substring(0, 500);
+                            const responseContainer = document.createElement('div');
+                            responseContainer.classList.add('message-container');
+
+                            const responseElement = document.createElement('div');
+                            responseElement.classList.add('whatsapp-balloon', 'whatsapp-receiver');
+
+                            responseElement.innerHTML = `<strong>Resposta:</strong> ${truncatedResponse} <span class="timestamp">${timestamp}</span>`;
+
+                            // Adiciona tempo de resposta à mensagem
+                            const responseTimeElement = document.createElement('div');
+                            responseTimeElement.innerHTML = `<em>Tempo de resposta: ${message.responseTime}</em>`;
+                            responseContainer.appendChild(responseTimeElement);
+
+                            responseContainer.appendChild(responseElement);
+                            chatDiv.appendChild(responseContainer);
+
+                            // Adiciona botão para exibir o restante da resposta
+                            if (message.response.length > 500) {
+                                const remainingResponse = message.response.substring(500);
+                                const showMoreButton = document.createElement('button');
+                                showMoreButton.textContent = 'Leia mais';
+                                showMoreButton.id = 'showMore';
+                                showMoreButton.onclick = () => showRemainingResponse(remainingResponse, timestamp);
+                                responseContainer.appendChild(showMoreButton);
+                            }
+
+                            hideLoading(); // Esconde o "loading" após mostrar a resposta
+                            chatDiv.scrollTop = chatDiv.scrollHeight; // Adiciona rolagem automática
+                        }, 1000); // Simula um atraso de 1 segundo
+                    } else {
+                        // Se não houver resposta, exiba a mensagem padrão
+                        messageElement.innerHTML = `<strong>${message.from}:</strong> ${message.body} <span class="timestamp">${timestamp}</span>`;
+                        messageContainer.appendChild(messageElement);
+                        chatDiv.appendChild(messageContainer);
+                        chatDiv.scrollTop = chatDiv.scrollHeight; // Adiciona rolagem automática
+                    }
+                });
+
+            } else {
+                const messageContainer = document.createElement('div');
+                messageContainer.classList.add('message-container');
+
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('whatsapp-balloon', data.from === 'Chatbot' ? 'whatsapp-receiver' : 'whatsapp-sender');
+
+                //  formatar o timestamp
+                const timestamp = formatTimestamp(data.timestamp);
+
+                messageElement.innerHTML = `<strong>${data.from}:</strong> ${data.body} <span class="timestamp">${timestamp}</span>`;
+                messageContainer.appendChild(messageElement);
+                chatDiv.appendChild(messageContainer);
+                chatDiv.scrollTop = chatDiv.scrollHeight; //  rolagem automática
+            }
+        };
+
+        //  Verificar se uma data é válida
+        function isValidDate(date) {
+            return date && !isNaN(new Date(date).getTime());
+        }
+
+        // Formatar a data
+        function formatTimestamp(timestamp) {
+            const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false };
+            return new Date(timestamp).toLocaleString('pt-BR', options);
+        }
+
+        //  Mostrar o restante da resposta
+        function showRemainingResponse(remainingResponse, timestamp) {
+            showLoading(); // Exibe o indicador de "loading" antes de mostrar o restante da resposta
+
+            // setTimeout para simular um atraso de carregamento
+            setTimeout(() => {
+                const responseContainer = document.createElement('div');
+                responseContainer.classList.add('message-container');
+
+                const responseElement = document.createElement('div');
+                responseElement.classList.add('whatsapp-balloon', 'whatsapp-receiver');
+
+                responseElement.innerHTML = remainingResponse + `<span class="timestamp">${timestamp}</span>`;
+
+                // Adiciona tempo de resposta à mensagem
+                if (responseTime) {
+                    const responseTimeElement = document.createElement('div');
+                    responseTimeElement.innerHTML = `<em>Tempo de resposta: ${formatTime(responseTime)}</em>`;
+                    responseContainer.appendChild(responseTimeElement);
+                }
+
+                responseElement.innerHTML = remainingResponse + `<span class="timestamp">${timestamp}</span>`;
+                responseContainer.appendChild(responseElement);
+                document.getElementById('chat').appendChild(responseContainer);
+
+                document.getElementById('showMore').style.display = 'none';
+                hideLoading(); // Esconde  loading após mostrar o restante da resposta
+                chatDiv.scrollTop = chatDiv.scrollHeight; // Adiciona rolagem automática
+            }, 1000); // Simula um atraso de 1 segundo
+        }
+
+        // Função para enviar mensagem
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value;
+            const system = systemInput.value; // Obtém o valor do campo do sistema
+            // Faça uma solicitação para enviar a mensagem ao servidor
+            fetch('/send-message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message, system }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Lmpar o campo de entrada após o envio bem-sucedido
+                        messageInput.value = '';
+                        systemInput.value = ''; // Limpa o campo do sistema
+                    } else {
+                        console.error('Erro ao enviar a mensagem:', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao enviar a mensagem:', error);
+                });
+        }
+
+    </script>
+
+    <script>
+
+
+        // Função para formatar o timestamp
+        function formatTimestamp(timestamp) {
+            const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false };
+            return new Date(timestamp).toLocaleString('pt-BR', options);
+        }
+
+    </script>
+
+    <script>
+        // Faça uma requisição para o servidor e atualize a imagem do QR code
+        fetch('/qrcode')
+            .then(response => response.json())
+            .then(data => {
+                // Verifica se o cliente está conectado
+                if (!data.isWhatsAppConnected) {
+                    // Se não estiver conectado, atualiza a imagem do QR code na página
+                    document.getElementById('qrCodeImg').src = data.qrCode;
+                } else {
+                    // Se estiver conectado, esconde o elemento da imagem do QR code
+                    document.getElementById('qrCodeContainer').style.display = 'none';
+                    // Exibe a div indicando a conexão
+                    document.getElementById('connectionStatus').style.display = 'block';
+                    // Mostra o contêiner do chat
+                    document.getElementById('chatContainer').style.display = 'block';
+                }
+            })
+            .catch(error => console.error('Erro ao obter QR code:', error));
+    </script>
+
+    <script>
+        // Execute esse script após a página ter sido totalmente carregada
+        document.addEventListener("DOMContentLoaded", function () {
+            // Obtém a referência ao elemento input
+            var systemInput = document.getElementById("systemInput");
+
+            // Define a mensagem padrão
+            var mensagemPadrao =
+                "Você é um médico do serviço emergência médica. Capacitado com todo o conhecimento médico necessário para diagnosticar qualquer problema de saúde com base em uma descrição. Suas respostas devem ser: no idioma português do Brasil; curtas e objetivas, de no máximo 60 caracteres; em uma única frase, sem pontuação; informar somente o diagnóstico final e nenhuma informação adicional, sem nenhum prefixo ou sufixo, somente o diagnóstico final. Dê um diagnóstico com base na seguinte informação:";
+
+            // Define o valor do input como a mensagem padrão
+            systemInput.value = mensagemPadrao;
+        });
+    </script>
+
+</body>
+
+</html>

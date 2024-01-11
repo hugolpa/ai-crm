@@ -1,0 +1,288 @@
+<!-- panel.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .menu {
+            height: 100vh;
+            width: 80px;
+            background-color: #333;
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            color: white;
+            transition: width 0.5s;
+            /* Adicionando uma transição para um efeito suave */
+        }
+
+        .menu a {
+            text-decoration: none;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .content {
+            margin-left: 80px;
+            padding: 20px;
+            transition: margin-left 0.5s;
+            /* Adicionando uma transição para um efeito suave */
+        }
+
+        /*  botão de alternância */
+        #toggle-btn {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            cursor: pointer;
+        }
+
+        /*  "Adicionar Dispositivos" */
+        #add-devices-btn {
+            margin-top: 20px;
+        }
+
+        /*  título e o botão na mesma linha */
+        .title-and-button {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Barra lateral -->
+            <nav class="col-md-2 d-none d-md-block bg-light sidebar" id="sidebar">
+                <div class="sidebar-sticky">
+                    <!-- Conteúdo da barra lateral -->
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-user"></i>
+                                Foto
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-user-circle"></i>
+                                Nome
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-link"></i>
+                                Conexões
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-chart-line"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-envelope"></i>
+                                Mensagens
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/chatbot">
+                                <i class="fas fa-robot"></i>
+                                Bot
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Sair
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Botão de alternância da barra lateral -->
+            <div id="toggle-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </div>
+
+            <!-- Conteúdo Principal -->
+            <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4 content">
+                <h2>Chat-AI-INOVA</h2>
+                <div class="container">
+                    <div class="row title-and-button">
+                        <h2 class="mt-4">Conexão de Dispositivos</h2>
+                        <button class="btn btn-primary" id="add-devices-btn">Adicionar Dispositivos</button>
+                    </div>
+
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>Status</th>
+                                <th>Sessão</th>
+                                <th>Ultima Atualização</th>
+                                <th>Padrão</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="containerList">
+
+                            <tr>
+                                <td>1</td>
+                                <td>Luan</td>
+                                <td>Ativo</td>
+                                <td><button class='mr-2 btn btn-info' onclick='disconnectDevice(1)'>desconectar</button>
+                                </td>
+                                <td>2023-12-01 12:30:00</td>
+                                <td>Sim</td>
+                                <td><button class='mr-2 btn btn-info'>Excluir</button><button
+                                        class=' btn btn-info'>Editar</button></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Hugo</td>
+                                <td>Inativo</td>
+                                <td><button class="btn btn-primary" id="showQrCodeBtn" data-toggle="modal"
+                                        data-target="#qrCodeModal">Mostrar QR Code/chatbot</button>
+                                    <!--<button class='btn btn-success' onclick='openChat()'>QRCODE</button>-->
+                                </td>
+                                <td>2023-12-01 11:45:00</td>
+                                <td>Não</td>
+                                <td><button class='mr-2 btn btn-info'>Excluir</button><button
+                                        class=' btn btn-info'>Editar</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+            <!-- Modal QR Code -->
+            <div class="modal fade" id="qrCodeModal" tabindex="-1" role="dialog" aria-labelledby="qrCodeModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <div class="alert alert-warning" role="alert">
+                                Espere até que seja renderizado o QR code, quando scaneado com sucessso irá
+                                automaticamente para a rota localhost:3000/chatbot.<!--  <button
+                                    class='btn btn-success' id="Abrirchat" onclick='openChat()'
+                                    disabled>Chatbot</button>-->
+                            </div>
+                            <h5 class="modal-title" id="qrCodeModalLabel"> </h5>
+
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Insert QR code image here -->
+                            <img id="modalQrCodeImg" alt="QR Code">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Scripts do Bootstrap -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Ícones Font Awesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+
+    <script>
+        function toggleSidebar() {
+            var sidebar = document.getElementById("sidebar");
+            var content = document.querySelector(".content");
+            if (sidebar.style.width === "80px") {
+                sidebar.style.width = "0";
+                content.style.marginLeft = "0";
+            } else {
+                sidebar.style.width = "80px";
+                content.style.marginLeft = "80px";
+            }
+        }
+    </script>
+    <script>
+        function openChat() {
+            // Redirecionar para a página do chatbot (chatbot.ejs)
+            window.location.href = '/chatbot';
+        }
+    </script>
+    <script>
+        document.getElementById('showQrCodeBtn').addEventListener('click', function () {
+            // Sincronizar a imagem vinda do server e atualizar a imagem do qr code
+            fetch('/qrcode')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('modalQrCodeImg').src = data.qrCode;
+                })
+                .catch(error => console.error('Error fetching QR code:', error));
+        });
+        // lidar com o redirecionamento se conectado
+        const socket = new WebSocket('ws://localhost:3000/chat');
+        socket.addEventListener('message', function (event) {
+            const data = JSON.parse(event.data);
+            if (data.ready) {
+                openChat();
+                /*enableChatButton();*/
+            }
+        });
+
+
+
+        /* function enableChatButton() {
+             const abrirChatBtn = document.getElementById('Abrirchat');
+             abrirChatBtn.removeAttribute('disabled'); // Remover o atributo 'disabled'
+         }*/
+
+    </script>
+
+
+    <script>
+        function disconnectDevice(deviceId) {
+            try {
+                // desconectar o dispositivo com o ID fornecido
+                console.log(`Desconectar dispositivo com ID ${deviceId}`);
+                
+            } catch (error) {
+                console.error('Erro ao desconectar dispositivo:', error);
+                
+            }
+        }
+    </script>
+
+
+
+
+
+
+</body>
+
+</html>
