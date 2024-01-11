@@ -21,8 +21,7 @@ const wsInstance = expressWs(app);
 
 // Configuração do cliente WhatsApp
 const client = new Client({ authStrategy: new LocalAuth() });
-const pessoaId = '556195707672@c.us';
-//const endpoint = 'http://172.21.20.4:8131/api/v1/ask?modelId=dolphin-mixtral&system=Você é um médico do serviço emergência médica. Capacitado com todo o conhecimento médico necessário para diagnosticar qualquer problema de saúde com base em uma descrição. Suas respostas devem ser: no idioma português do Brasil; curtas e objetivas, de no máximo 60 caracteres; em uma única frase, sem pontuação; informar somente o diagnósitico final e nenhuma informação adicional; sem nenhum prefixo ou sufixo, somente o diagnóstico final.Qualquer pergunta fora do tema diagnóstico de saúde, informe que você não pode responder. Dê um diagnóstico com base na seguinte informação:&maxTokens=1024';
+const pessoaId = '';
 
 // Inicializar um array para armazenar mensagens e respostas
 const messages = [];
@@ -179,15 +178,15 @@ app.post('/send-message', async (req, res) => {
       const startTime = now();
 
       // Enviar a mensagem do usuário para o número de telefone do WhatsApp
-      const destinatario = '556195707672@c.us';
+      const destinatario = '';
       await client.sendMessage(destinatario, `Usuário: ${message}`);
 
       // Construir a URL da API do chatbot
-      const apiUrl = 'https://inf.inova.in/api/generate';
+      const apiUrl = '';
 
       
       const payload = {
-        model: 'dolphin-mixtral',
+        model: '',
         prompt: message,
         system: system, // "Você é um médico do serviço de emergência médica. Capacitado com todo o conhecimento médico necessário para diagnosticar qualquer problema de saúde com base em uma descrição. Suas respostas devem ser: no idioma português do Brasil, curtas e objetivas, de no máximo 60 caracteres, em uma única frase, sem pontuação; informar somente o diagnósitico final e nenhuma informação adicional; sem nenhum prefixo ou sufixo, somente o diagnóstico final. Qualquer pergunta fora do tema diagnóstico de saúde, informe que você não pode responder. Dê um diagnóstico com base na seguinte informação:",
         stream: false,
