@@ -1,4 +1,4 @@
-# ChatBot CRM
+# ChatBot CRM (versão demosntração para portifólio)
 
 O **ChatBot CRM** é uma aplicação inovadora que combina um sistema de Customer Relationship Management (CRM) com um assistente virtual alimentado por inteligência artificial. Essa solução oferece uma maneira eficiente de gerenciar interações com clientes por meio de mensagens no WhatsApp, proporcionando uma experiência única e personalizada.
 
